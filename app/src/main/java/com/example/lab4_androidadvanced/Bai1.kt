@@ -6,56 +6,55 @@ import android.location.Address
 import android.location.Geocoder
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Looper
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.lab4_androidadvanced.databinding.ActivityBai1Binding
-import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.*
 import com.google.android.gms.tasks.OnCompleteListener
 import java.util.*
-import java.util.jar.Manifest
 
 class Bai1 : AppCompatActivity() {
     private lateinit var binding: ActivityBai1Binding
+    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+    private lateinit var locationRequest: LocationRequest
+
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityBai1Binding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
+        locationRequest = LocationRequest.create()
+        locationRequest.interval = 2000
+        locationRequest.fastestInterval = 1000
+        locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+
         if (!isPermissionGranted()) {
             requestPermission()
         }
-        setToTextView()
+        startLocationUpdate()
+    }
+
+    private fun checkLocationRequestSetting() {
+        val locationSettingRequest = LocationSettingsRequest.Builder()
+            .addLocationRequest(locationRequest)
+            .build()
+        val settingClient = LocationServices.getSettingsClient(this)
+
+
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun startLocationUpdate() {
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
     }
 
 
-    private fun setToTextView() {
-        val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            return
-        }
-        fusedLocationProviderClient.lastLocation.addOnCompleteListener(OnCompleteListener {
 
-            val location = it.result
-            if (location != null) {
-                val geocoder = Geocoder(this, Locale.getDefault())
-
-                val addressList: List<Address> =
-                    geocoder.getFromLocation(location.latitude, location.longitude, 1)
-
-                binding.txtLatitude.text = "Latitude: ${addressList[0].latitude}"
-                binding.txtLongitude.text = "Longitude = ${addressList[0].longitude}"
-                binding.txtCountry.text = "Country = ${addressList[0].countryName}"
-
-            }
-        })
-    }
 
     private fun isPermissionGranted(): Boolean {
         if (ContextCompat.checkSelfPermission(
@@ -91,8 +90,15 @@ class Bai1 : AppCompatActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        setToTextView()
+       startLocationUpdate()
     }
 
-
+    private val locationCallback = object : LocationCallback() {
+        override fun onLocationResult(locationResult: LocationResult) {
+            for (location in locationResult.locations) {
+                binding.txtLatitude.text = "Latitude: ${location.latitude}"
+                binding.txtLongitude.text = "Longitude = ${location.longitude}"
+            }
+        }
+    }
 }

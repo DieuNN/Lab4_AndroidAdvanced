@@ -6,7 +6,9 @@ import android.os.Bundle
 import android.widget.Toast
 import com.example.lab4_androidadvanced.databinding.ActivityMainBinding
 
-class MainActivity : AppCompatActivity() {
+class PH15766MainActivity : AppCompatActivity() {
+    // Họ tên: Nông Ngọc Diệu
+    // MSSV: PH15766
     private lateinit var binding:ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
